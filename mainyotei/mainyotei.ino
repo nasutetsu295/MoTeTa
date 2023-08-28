@@ -52,8 +52,87 @@ int32_t MotorRun(uint8_t n, int16_t Speed) {
 }
 
 void kosen(){
-  kouka
+    M5.Speaker.tone(262);
+  delay(234);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(262);
+  delay(77);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(294);
+  delay(312);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(330);
+  delay(312);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(349);
+  delay(156);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(349);
+  delay(312);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(392);
+  delay(156);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(440);
+  delay(156);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(349);
+  delay(156);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(349);
+  delay(156);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(392);
+  delay(156);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(440);
+  delay(312);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(587);
+  delay(234);
+  M5.Speaker.noTone();
+
+  M5.Speaker.tone(587);
+  delay(77);
+ M5.Speaker.noTone();
+
+  M5.Speaker.tone(523);
+  delay(468);
+ M5.Speaker.noTone();
+
+  M5.Speaker.tone(523);
+  delay(156);
+ M5.Speaker.noTone();
+
+  M5.Speaker.tone(523);
+  delay(312);
+ M5.Speaker.noTone();
+
+  M5.Speaker.tone(392);
+  delay(234);
+ M5.Speaker.noTone();
+
+  M5.Speaker.tone(440);
+  delay(77);
+ M5.Speaker.noTone();
+
+  M5.Speaker.tone(349);
+  delay(937);
+ M5.Speaker.noTone();
 }
+
 
 void setup() {
     M5.begin();
