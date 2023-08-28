@@ -6,7 +6,6 @@ VL53L0X sensor;
 TCA9548A I2CMux; 
 
 void setup() {
-  Serial.begin(115200);
   Wire.begin();
   M5.begin();
   sensor.init();
