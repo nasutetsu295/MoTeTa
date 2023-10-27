@@ -1,8 +1,10 @@
 import numpy as np
 import cv2 as cv
 import os
+from PIL import Image
 
 #print(os.getcwd())
+
 
 #test H or S or U. we can select from our keybord.
 while True:
@@ -11,26 +13,67 @@ while True:
     want = input()
 
     if want == "H":
-        image = cv.imread('realW_H.jpg')
+        image_O = cv.imread('IMG_H.jpg')
         break
     elif want == "S":
-        image = cv.imread('realW_S.jpg')
+        image_O = cv.imread('IMG_S.jpg')
         break
     elif want == "U":
-        image = cv.imread('realW_U.jpg')
+        image_O = cv.imread('IMG_U.jpg')
         break
     else:
-        print("select H or S or U")
+        print(" you can't select it.")
+
+#print(type(image))     #for debug. this code is for <class 'numpy.ndarray'>
+
+change = Image.fromarray(np.uint8(image_O))      #change small size of image
+image_D = np.asarray(change.resize((300, 300)))
 
 
-#Preprocess
-gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)    #convert BGR to GRAY
+#become 0 without inside of square
 
-blur = cv.GaussianBlur(gray, (5, 5), 0)         #Gaussian-filter
+def mksquare(im, x, y, w, h):   #(image, X_origin of square, y_origin of square, width of square, hight of square)
+
+    width = im.shape[1]
+    hight = im.shape[0]
+    m, n = 0, 0
+
+    while True:
+
+        if(n < y or n > y+h ):
+            im[n, m] = 0
+        elif(m < x or m > x+w):
+            im[n,m] = 0
+        
+        m = m + 1
+
+        if(m == width):
+            m = 0
+            n = n + 1
+    
+        if(n == hight):
+            break
+
+    return im
+
+
+
+
+#(< Preprocess >)
+
+gray = cv.cvtColor(image_O, cv.COLOR_BGR2GRAY)    #convert BGR to GRAY
+
+# blur = cv.GaussianBlur(gray, (5,5), 0)         #Gaussian-filter
+change = Image.fromarray(np.uint8(gray))      #change small size of image
+resize = np.asarray(change.resize((300, 300)))
+blur = cv.blur(resize, (3,3))
 
 #thresh = cv.adaptiveThreshold(blur, 255, 1, 1, 91, 2)  #convert only 2 color(black or white) iamge
 A, thresh = cv.threshold(blur, 75, 255, cv.THRESH_BINARY_INV)
 
+
+
+#(< recognize >)
 
 contours = cv.findContours(
     thresh, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)[0]
@@ -42,31 +85,61 @@ for i, countor in enumerate(contours):
     if(area < 0):
         area = area * -1
 
-    if area < 250000: continue         #if area is less than 500 pixel, Remove
-    
+    if area < 500: continue         #if area is less than 500 pixel, Remove
+
     x, y, w, h = cv.boundingRect(countor)
     red = (0, 0, 255)
-    cv.rectangle(image, (x, y), (x+w, y+h), red, 10)
+    cv.rectangle(image_D, (x, y), (x+w, y+h), red, 3)
 
-    print(f"面積[{i}]: {area}")
-
-
-#for moji in contours:
-#    x, y, w, h = cv.boundingRect(moji)
-#    if h < 20: continue
-#    red = (0, 0, 255)
-#    cv.rectangle(image, (x, y), (x+w, y+h), red, 2)
+    # print(f"面積[{i}]: {area}")
 
 
 
-cv.imwrite('re-moji.png', image)
-#print(image.shape)
+Top = thresh.copy()     # this is copy, not refer. a copy is different from origin (of memory).
+Bottom = thresh.copy()
 
-cv.namedWindow('out_image', cv.WINDOW_NORMAL)
+#width,hight of square(mksquare)
+Top_W = w/3
+Top_H = h/3
+Bottom_W = w/3
+Bottom_H = h/3
+
+mksquare(Top, x+w/3, y, Top_W, Top_H)               # make mask of top region of the letter 
+mksquare(Bottom,x+w/3, y+2*h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
+
+Top_rate = cv.countNonZero(Top) / (Top_W * Top_H) * 100                 # get area percentage of top region of the letter
+Bottom_rate = cv.countNonZero(Bottom) / (Bottom_W * Bottom_H) * 100     # get area percentage of bottom region of the letter
+
+
+if (Top_rate < 5):          # if Top_rate is less than 5%, the picture is H or U. But, if not, the picture is S
+
+    if(Bottom_rate < 5):    # if Bottom rate is less than 5%, the picture is H. But , if not, the picture is U
+        letter = "H"
+    
+    else:
+        letter = "U"
+    
+else:
+    letter = "S"
+
+
+
+cv.imwrite('re-moji.png', image_O)
+
 cv.namedWindow('in_image', cv.WINDOW_NORMAL)
-#height = image.shape[0]
-#width = image.shape[1]
-#Rimage = cv.resize(image, (width/2, height/2))
-cv.imshow('in_image', image)
-cv.imshow('out_image', thresh)
+cv.namedWindow('out_imageO', cv.WINDOW_NORMAL)
+cv.namedWindow('out_imageT', cv.WINDOW_NORMAL)
+cv.namedWindow('out_imageB', cv.WINDOW_NORMAL)
+
+cv.imshow('in_image', image_D)
+cv.imshow('out_imageO', thresh)
+cv.imshow('out_imageT', Top)
+cv.imshow('out_imageB', Bottom)
+
+# print(thresh.shape[0]," ",image_O.shape[0])
+# print(thresh.shape[1]," ",image_O.shape[1])
+print(Top_rate)
+print(Bottom_rate)
+print(letter)
+
 cv.waitKey(0)
