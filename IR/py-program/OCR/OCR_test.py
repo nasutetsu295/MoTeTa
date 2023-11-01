@@ -6,6 +6,22 @@ from PIL import Image
 #print(os.getcwd())
 
 
+
+#value
+width = 300
+hight = 300
+
+blur_block = 5
+
+Top_rate_thresh = 5
+Bottom_rate_thresh = 5
+
+TwoValue_thresh = 70
+
+area_thresh = 1000
+
+
+
 #test H or S or U. we can select from our keybord.
 while True:
 
@@ -27,7 +43,7 @@ while True:
 #print(type(image))     #for debug. this code is for <class 'numpy.ndarray'>
 
 change = Image.fromarray(np.uint8(image_O))      #change small size of image
-image_D = np.asarray(change.resize((300, 300)))
+image_D = np.asarray(change.resize((width, hight)))
 
 
 #become 0 without inside of square
@@ -65,11 +81,11 @@ gray = cv.cvtColor(image_O, cv.COLOR_BGR2GRAY)    #convert BGR to GRAY
 
 # blur = cv.GaussianBlur(gray, (5,5), 0)         #Gaussian-filter
 change = Image.fromarray(np.uint8(gray))      #change small size of image
-resize = np.asarray(change.resize((300, 300)))
-blur = cv.blur(resize, (3,3))
+resize = np.asarray(change.resize((width, hight)))
+blur = cv.blur(resize, (blur_block, blur_block))
 
 #thresh = cv.adaptiveThreshold(blur, 255, 1, 1, 91, 2)  #convert only 2 color(black or white) iamge
-A, thresh = cv.threshold(blur, 75, 255, cv.THRESH_BINARY_INV)
+A, thresh = cv.threshold(blur, TwoValue_thresh, 255, cv.THRESH_BINARY_INV)
 
 
 
@@ -85,7 +101,7 @@ for i, countor in enumerate(contours):
     if(area < 0):
         area = area * -1
 
-    if area < 500: continue         #if area is less than 500 pixel, Remove
+    if area < area_thresh: continue         #if area is less than area_thresh pixel, Remove
 
     x, y, w, h = cv.boundingRect(countor)
     red = (0, 0, 255)
@@ -111,9 +127,9 @@ Top_rate = cv.countNonZero(Top) / (Top_W * Top_H) * 100                 # get ar
 Bottom_rate = cv.countNonZero(Bottom) / (Bottom_W * Bottom_H) * 100     # get area percentage of bottom region of the letter
 
 
-if (Top_rate < 5):          # if Top_rate is less than 5%, the picture is H or U. But, if not, the picture is S
+if (Top_rate < Top_rate_thresh):          # if Top_rate is less than 5%, the picture is H or U. But, if not, the picture is S
 
-    if(Bottom_rate < 5):    # if Bottom rate is less than 5%, the picture is H. But , if not, the picture is U
+    if(Bottom_rate < Bottom_rate_thresh):    # if Bottom rate is less than 5%, the picture is H. But , if not, the picture is U
         letter = "H"
     
     else:
