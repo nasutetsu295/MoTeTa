@@ -77,7 +77,7 @@ def mksquare(im, x, y, w, h):   #(image, X_origin of square, y_origin of square,
 
 #(< Preprocess >)
 
-gray = cv.cvtColor(image_O, cv.COLOR_BGR2GRAY)    #convert BGR to GRAY
+gray = cv.cvtColor(image_O, cv.COLOR_BGR2GRAY)    #convert BGR into GRAY
 
 # blur = cv.GaussianBlur(gray, (5,5), 0)         #Gaussian-filter
 change = Image.fromarray(np.uint8(gray))      #change small size of image
