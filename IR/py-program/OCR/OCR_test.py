@@ -120,8 +120,18 @@ Top_H = h/3
 Bottom_W = w/3
 Bottom_H = h/3
 
-mksquare(Top, x+w/3, y, Top_W, Top_H)               # make mask of top region of the letter 
-mksquare(Bottom,x+w/3, y+2*h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
+# if w < h:
+
+#     mksquare(Top, x+w/3, y, Top_W, Top_H)               # make mask of top region of the letter 
+#     mksquare(Bottom,x+w/3, y+2*h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
+
+# else:
+
+#     mksquare(Top, x, y+h/3, Top_W, Top_H)               # make mask of top region of the letter 
+#     mksquare(Bottom,x+2*w/3, y+h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
+
+mksquare(Top, x, y+h/3, Top_W, Top_H)               # make mask of top region of the letter 
+mksquare(Bottom,x+2*w/3, y+h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
 
 Top_rate = cv.countNonZero(Top) / (Top_W * Top_H) * 100                 # get area percentage of top region of the letter
 Bottom_rate = cv.countNonZero(Bottom) / (Bottom_W * Bottom_H) * 100     # get area percentage of bottom region of the letter
