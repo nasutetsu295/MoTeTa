@@ -3,16 +3,21 @@ import numpy as np
 import serial
 import time
 from PIL import Image
+from gpiozero import LED
 
 
-ser = serial.Serial('/dev/ttyAMA0', 9600, timeout = 1.0)
 
-
-cap = cv.VideoCapture(0)         # if you know index, refer to " ls -la /dev/video* "
+cap = cv.VideoCapture(1)         # if you know index, refer to " ls -la /dev/video* "
 cap.set(cv.CAP_PROP_FPS, 5)
-cap2 = cv.VideoCapture(1)
+cap2 = cv.VideoCapture(0)
 cap2.set(cv.CAP_PROP_FPS, 5)
 
+
+
+outPIN_a = 16
+outPIN_b = 20
+outPIN_cl = 21
+outPIN_camera = 12
 
 
 lower_red = (0, 50, 50)  # 赤色の下限(H, S, V)          red's H = -10~20
@@ -40,9 +45,10 @@ avaliable = 0                       #avaliable == 1 --> there is letter in frame
 Top_rate_thresh = 5
 Bottom_rate_thresh = 5
 
-TwoValue_thresh = 75
+TwoValue_thresh = 95
 
-area_thresh = 1000
+area_thresh_mini = 5000
+area_thresh_max = 50000
 
 judge = 20                               #If the most color percentage(%) is more than judge, send color to M5
 color :int = 0
@@ -92,6 +98,88 @@ def mksquare(im, x, y, w, h):   #become 0 without inside of square  :  (image, X
             break
 
     return im
+
+
+
+def digitalsend():
+    
+    pin_a = LED(outPIN_a)
+    pin_b = LED(outPIN_b)
+    CorL = LED(outPIN_cl)
+    cameraLR = LED(outPIN_camera)
+    
+    
+    if(letter == "none"):
+        if(color == 0):
+            xor = 0
+        else:
+            xor = 1                   #color in camera
+    else:
+        if(color == 0):
+            xor = 2                   #letter in camera
+        else:
+            xor = 3                   #letter  and color in camera
+
+
+    if(xor == 1):                     #color in camera
+        
+        
+        
+        if(iii == 1):
+            cameraLR.off()
+            print("camera:L")
+        elif(iii == 2):
+            cameraLR.on()
+            print("camera:R")
+        
+        CorL.on()
+
+        if(color == 1):
+            pin_a.on()
+            pin_b.off()
+            print("R")
+        elif(color == 2):
+            pin_a.off()
+            pin_b.on()
+            print("Y")
+        elif(color == 3):
+            pin_a.on()
+            pin_b.on()
+            print("G")
+
+    elif(xor == 2):                   #letter in camera
+        
+        if(iii == 1):
+            cameraLR.off()
+            print("camera:L")
+        elif(iii == 2):
+            cameraLR.on()
+            print("camera:R")
+            
+        CorL.off()
+            
+        if(letter == "H"):
+            pin_a.on()
+            pin_b.off()
+            print("H")
+        elif(letter == "S"):
+            pin_a.off()
+            pin_b.on()
+            print("S")
+        elif(letter == "U"):
+            pin_a.on()
+            pin_b.on()
+            print("U")
+
+    elif(xor == 3):
+        pin_a.on()
+        pin_b.on()
+        print("U")
+
+    else:
+        pin_a.off()
+        pin_b.off()
+        print("none")
 
 
 
@@ -159,7 +247,8 @@ while True:
             if(area < 0):
                 area = area * -1
 
-            if area < area_thresh: continue         #if area is less than area_thresh pixel, Remove
+            if area < area_thresh_mini: continue         #if area is less than area_thresh pixel, Remove
+            if area > area_thresh_max: continue
             
             avaliable = 1
             x, y, w, h = cv.boundingRect(countor)
@@ -220,15 +309,12 @@ while True:
 
 
         #If the most color is large, connect to M5
-        if (mount >= judge):
-            ser.write(color)
-            print("color : ", color)
-            
-        else:
-            print("color : ", 0)
-            ser.write(0)              #neither the three color in camera
-        
-        
+        if (mount <= judge):
+            color = 0                         #neither the three color in camera
+
+        digitalsend()
+
+        print("color : ", color)
         print("Top rate : ", Top_rate)
         print("Bottom rate : ", Bottom_rate)
         print(letter)
