@@ -8,9 +8,9 @@ from gpiozero import LED
 
 
 cap = cv.VideoCapture(1)         # if you know index, refer to " ls -la /dev/video* "
-cap.set(cv.CAP_PROP_FPS, 5)
+cap.set(cv.CAP_PROP_FPS, 2)
 cap2 = cv.VideoCapture(0)
-cap2.set(cv.CAP_PROP_FPS, 5)
+cap2.set(cv.CAP_PROP_FPS, 2)
 
 
 
@@ -44,6 +44,7 @@ avaliable = 0                       #avaliable == 1 --> there is letter in frame
 
 Top_rate_thresh = 5
 Bottom_rate_thresh = 5
+region_rate_thresh = 45
 
 TwoValue_thresh = 95
 
@@ -261,8 +262,10 @@ while True:
 
             Top = thresh.copy()     # this is copy, not refer. a copy is different from origin (of memory).
             Bottom = thresh.copy()
-            left = thresh.copy()
-            right = thresh.copy()
+            region = thresh.copy()
+#             left = thresh.copy()
+#             right = thresh.copy()
+            
 
             #width,hight of square(mksquare)
             Top_W = w/3
@@ -272,39 +275,49 @@ while True:
 
             mksquare(Top, x+w/3, y, Top_W, Top_H)               # make mask of top region of the letter 
             mksquare(Bottom,x+w/3, y+2*h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
-            mksquare(left, x, y+h/3, Top_W, Top_H)               # make mask of top region of the letter 
-            mksquare(right,x+2*w/3, y+h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
+            mksquare(region, x, y, w, h)                        # make mask of region of the letter
+#             mksquare(left, x, y+h/3, Top_W, Top_H)               # make mask of top region of the letter 
+#             mksquare(right,x+2*w/3, y+h/3, Bottom_W, Bottom_H) # make mask of bottom region of the letter
 
 
             Top_rate = cv.countNonZero(Top) / (Top_W * Top_H) * 100                 # get area percentage of top region of the letter
             Bottom_rate = cv.countNonZero(Bottom) / (Bottom_W * Bottom_H) * 100     # get area percentage of bottom region of the letter
-            left_rate = cv.countNonZero(left) / (Top_W * Top_H) * 100                 # get area percentage of top region of the letter
-            right_rate = cv.countNonZero(right) / (Bottom_W * Bottom_H) * 100     # get area percentage of bottom region of the letter
+            region_rate = cv.countNonZero(region) / (w * h) * 100
+#             left_rate = cv.countNonZero(left) / (Top_W * Top_H) * 100             # get area percentage of left region of the letter
+#             right_rate = cv.countNonZero(right) / (Bottom_W * Bottom_H) * 100     # get area percentage of right region of the letter
 
 
-            # the case of no trend of  a letter
+            if (region_rate < region_rate_thresh):
+                
+                # the case of no trend of  a letter
 
-            if (Top_rate < Top_rate_thresh):            # if Top_rate is nothing, the picture is H or U. But, if not, the picture is U(inverted)x or S.
+                if (Top_rate < Top_rate_thresh):            # if Top_rate is nothing, the picture is H or U. But, if not, the picture is U(inverted)x or S.
 
-                if(Bottom_rate < Bottom_rate_thresh):    # if Bottom rate is nothing, the picture is H. But , if not, the picture is U
-                    letter = "H"
-       
+                    if(Bottom_rate < Bottom_rate_thresh):    # if Bottom rate is nothing, the picture is H. But , if not, the picture is U
+                        letter = "H"
+           
+                    else:
+                        letter = "U"
+                        
                 else:
-                    letter = "U"
                     
+                    if (Bottom_rate < Bottom_rate_thresh):  # if Bottom rate is nothing, the picture is U(inverted). But , if not, the picture is S
+                        letter = "U"
+
+                    else:
+                        letter = "S"
+            
             else:
+                letter = "none"
+                Top_rate = "none"
+                Bottom_rate = "none"
+                region_rate = "none"
                 
-                if (Bottom_rate < Bottom_rate_thresh):  # if Bottom rate is nothing, the picture is U(inverted). But , if not, the picture is S
-                    letter = "U"
-
-                else:
-                    letter = "S"
-                
-
         else:
             letter = "none"
             Top_rate = "none"
             Bottom_rate = "none"
+            region_rate = "none"
 
 
 
@@ -317,6 +330,7 @@ while True:
         print("color : ", color)
         print("Top rate : ", Top_rate)
         print("Bottom rate : ", Bottom_rate)
+        print("region rate : ", region_rate)
         print(letter)
         
         cv.imshow("thresh_frame", thresh)
